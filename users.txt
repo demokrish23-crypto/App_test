@@ -1,5 +1,10 @@
 faculty,krishsharma23oct@gmail.com,123456,Krish
 faculty,faculty1@gmail.com,pass123, Faculty one
+faculty,faculty1@gmail.com,pass123, Chaitanya
+faculty,khushichoudhary7799@gmail.com,12345, Khushi
+faculty,krriyadav27@gmail.com,krri12@, Krritika
+faculty,raj069395@gmail.com,kunal12@, Kunal
+faculty,singhgursimar193@gmail.com,simar12@, Gursimar
 admin,krishsharma23oct@gmail.com,12345,Krish
 admin,abcd@gmail.com,1234,Admin
 admin,khushi.mindforge@gmial.com,12345678,Khushi1
