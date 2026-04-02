@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics{% endblock %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  .stat-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
+  .stat-card { background:var(--card); padding:20px; border-radius:8px; box-shadow:var(--shadow); text-align:center; border: 1px solid var(--border); color: var(--text); }
+  .stat-card h3 { color:var(--primary); font-size:28px; margin:8px 0; }
+  .stat-card p { color:var(--text-muted); }
+  .chart-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; margin-bottom:24px; }
+  .chart-card { background:var(--card); padding:20px; border-radius:8px; box-shadow:var(--shadow); border: 1px solid var(--border); color: var(--text); min-height: 400px; }
+  .chart-card canvas { max-height: 350px; }
+  .chart-card table { width: 100%; color: var(--text); }
+  .chart-card th, .chart-card td { padding: 8px; border-bottom: 1px solid var(--border); text-align: left; }
+</style>
+
+<h2>Analytics Dashboard</h2>
+
+<div class="stat-grid">
+  <div class="stat-card">
+    <p>Total Questions</p>
+    <h3>{{ total_questions }}</h3>
+  </div>
+  <div class="stat-card">
+    <p>Papers Generated</p>
+    <h3>{{ total_papers }}</h3>
+  </div>
+  <div class="stat-card">
+    <p>Avg Questions/Paper</p>
+    <h3>{% if total_papers > 0 %}{{ (total_questions / total_papers) | round(1) }}{% else %}0{% endif %}</h3>
+  </div>
+  <div class="stat-card">
+    <p>Subjects</p>
+    <h3>{{ subjects | length }}</h3>
+  </div>
+</div>
+
+<div class="chart-grid">
+  <div class="chart-card">
+    <h3>Questions by Subject</h3>
+    <canvas id="subjectChart"></canvas>
+  </div>
+
+  <div class="chart-card">
+    <h3>Questions by Difficulty</h3>
+    <canvas id="difficultyChart"></canvas>
+  </div>
+</div>
+
+<script>
+  // Get theme and set chart colors accordingly
+  const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
+  
+  const chartColors = {
+    primary: isDarkMode ? '#00ff88' : '#16a34a',
+    secondary: isDarkMode ? '#38bdf8' : '#3b82f6',
+    warning: isDarkMode ? '#fbbf24' : '#f59e0b',
+    danger: isDarkMode ? '#fb7185' : '#ef4444',
+    accent: isDarkMode ? '#d8b4fe' : '#8b5cf6',
+    pink: isDarkMode ? '#f472b6' : '#ec4899',
+    borderColor: isDarkMode ? 'rgba(0, 255, 136, 0.3)' : 'var(--card)',
+    textColor: isDarkMode ? '#f1f5f9' : '#1e293b',
+    gridColor: isDarkMode ? 'rgba(0, 255, 136, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+  };
+
+  const subjectLabels = [{% for subject, count in subjects %}'{{ subject }}'{{ ", " if not loop.last else "" }}{% endfor %}];
+  const subjectData = [{% for subject, count in subjects %}{{ count }}{{ ", " if not loop.last else "" }}{% endfor %}];
+  
+  const diffLabels = [{% for diff, count in difficulty_dist %}'{{ diff }}'{{ ", " if not loop.last else "" }}{% endfor %}];
+  const diffData = [{% for diff, count in difficulty_dist %}{{ count }}{{ ", " if not loop.last else "" }}{% endfor %}];
+
+  const subjectCtx = document.getElementById('subjectChart').getContext('2d');
+  new Chart(subjectCtx, {
+    type: 'doughnut',
+    data: {
+      labels: subjectLabels,
+      datasets: [{
+        data: subjectData,
+        backgroundColor: [chartColors.primary, chartColors.secondary, chartColors.warning, chartColors.danger, chartColors.accent, chartColors.pink],
+        borderColor: chartColors.borderColor,
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: { 
+        legend: { 
+          position: 'bottom',
+          labels: { color: chartColors.textColor }
+        } 
+      }
+    }
+  });
+
+  const diffCtx = document.getElementById('difficultyChart').getContext('2d');
+  new Chart(diffCtx, {
+    type: 'bar',
+    data: {
+      labels: diffLabels,
+      datasets: [{
+        label: 'Question Count',
+        data: diffData,
+        backgroundColor: chartColors.primary,
+        borderColor: chartColors.primary,
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      scales: { 
+        y: { 
+          beginAtZero: true,
+          ticks: { color: chartColors.textColor },
+          grid: { color: chartColors.gridColor }
+        },
+        x: {
+          ticks: { color: chartColors.textColor },
+          grid: { color: chartColors.gridColor }
+        }
+      },
+      plugins: { 
+        legend: { 
+          display: true,
+          labels: { color: chartColors.textColor }
+        } 
+      }
+    }
+  });
+</script>
+{% endblock %}

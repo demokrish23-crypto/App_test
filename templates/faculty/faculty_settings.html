@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Settings{% endblock %}
+
+{% block content %}
+<style>
+  .settings-form { max-width:600px; }
+  .form-group { margin-bottom:20px; }
+  .form-group label { display:block; font-weight:600; margin-bottom:8px; color:#333; }
+  .form-group input { width:100%; padding:10px; border:1px solid #ddd; border-radius:4px; font-size:14px; }
+  .form-group input:focus { outline:none; border-color:#16a34a; box-shadow:0 0 0 2px rgba(22,163,74,.1); }
+  .settings-section { background:white; padding:20px; border-radius:8px; margin-bottom:20px; box-shadow:0 2px 8px rgba(0,0,0,.1); }
+</style>
+
+<h2>Account Settings</h2>
+
+<div class="settings-section">
+  <h3>Profile Information</h3>
+  <form method="POST" action="{{ url_for('update_settings') }}" class="settings-form">
+    <div class="form-group">
+      <label>Name</label>
+      <input type="text" name="name" value="{{ user.name or '' }}" required>
+    </div>
+
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" name="email" value="{{ user.email or '' }}" required>
+    </div>
+
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" name="password" placeholder="Leave empty to keep current password">
+    </div>
+
+    <button type="submit" class="btn">Save Changes</button>
+  </form>
+</div>
+
+<div class="settings-section">
+  <h3>Preferences</h3>
+  <div class="form-group">
+    <label>
+      <input type="checkbox" checked> Enable email notifications for new papers
+    </label>
+  </div>
+  <div class="form-group">
+    <label>
+      <input type="checkbox" checked> Auto-save papers as drafts
+    </label>
+  </div>
+  <div class="form-group">
+    <label>
+      <input type="checkbox"> Show advanced options
+    </label>
+  </div>
+</div>
+
+<div class="settings-section">
+  <h3>Danger Zone</h3>
+  <p style="color:#999; margin-bottom:12px;">Irreversible actions</p>
+  <button class="btn" style="background:#dc2626;" onclick="alert('Feature coming soon')">Delete Account</button>
+</div>
+{% endblock %}

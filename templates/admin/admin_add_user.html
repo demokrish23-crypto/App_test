@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Add User{% endblock %}
+
+{% block content %}
+<style>
+  .page-title { color: var(--text); margin-bottom: 2rem; }
+  .form-container { background:var(--card); max-width:500px; margin:30px auto; padding:30px; border-radius:8px; box-shadow:var(--shadow); border: 1px solid var(--border); }
+  .form-group { margin-bottom:20px; }
+  .form-group label { display:block; font-weight:600; margin-bottom:8px; color: var(--text); }
+  .form-group input, .form-group select { width:100%; padding:10px; border:1px solid var(--border); border-radius:4px; box-sizing:border-box; background:var(--light); color: var(--text); transition: var(--transition); }
+  .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1); }
+  .form-actions { display:flex; gap:12px; margin-top:24px; }
+  .btn { padding:10px 20px; border-radius:4px; cursor:pointer; border:none; text-decoration:none; transition: var(--transition); }
+  .btn-primary { background:var(--primary); color:white; }
+  .btn-primary:hover { background:var(--primary-dark); transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .btn-cancel { background:var(--light); color:var(--text); border: 1px solid var(--border); }
+  .btn-cancel:hover { background:var(--border); }
+</style>
+
+<h2 class="page-title">Add New User</h2>
+
+<div class="form-container">
+  <form method="POST" action="{{ url_for('admin.add_user') }}">
+    <div class="form-group">
+      <label for="email">Email</label>
+      <input type="email" id="email" name="email" required>
+    </div>
+    
+    <div class="form-group">
+      <label for="name">Name</label>
+      <input type="text" id="name" name="name" required>
+    </div>
+    
+    <div class="form-group">
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" required>
+    </div>
+    
+    <div class="form-group">
+      <label for="role">Role</label>
+      <select id="role" name="role" required>
+        <option value="faculty">Faculty</option>
+        <option value="admin">Admin</option>
+      </select>
+    </div>
+    
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">Create User</button>
+      <a href="{{ url_for('admin.manage_users') }}" class="btn btn-cancel">Cancel</a>
+    </div>
+  </form>
+</div>
+
+{% endblock %}

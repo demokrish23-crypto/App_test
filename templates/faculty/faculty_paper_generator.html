@@ -1,0 +1,634 @@
+{% extends "base.html" %}
+
+{% block title %}Paper Generator{% endblock %}
+
+{% block content %}
+<style>
+  .hero-section {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    border-radius: var(--radius-xl);
+    padding: 3rem 2rem;
+    margin-bottom: 2rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-section::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    animation: rotate 20s linear infinite;
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 1;
+  }
+
+  .hero-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+  }
+
+  .hero-subtitle {
+    font-size: 1.125rem;
+    opacity: 0.9;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .form-container {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  .form-section {
+    background: var(--card);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow);
+    padding: 2rem;
+    border: 1px solid var(--border);
+  }
+
+  .form-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--border);
+  }
+
+  .form-header i {
+    font-size: 2rem;
+    color: var(--primary);
+  }
+
+  .form-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0;
+  }
+
+  .form-subtitle {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    margin: 0;
+  }
+
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+
+  .form-group.required label::after {
+    content: ' *';
+    color: var(--danger);
+  }
+
+  .form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text);
+    font-size: 0.875rem;
+  }
+
+  .form-group input,
+  .form-group textarea,
+  .form-group select {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 0.875rem;
+    font-family: inherit;
+    transition: var(--transition);
+    background: white;
+  }
+
+  .form-group input:focus,
+  .form-group textarea:focus,
+  .form-group select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+  }
+
+  .form-group textarea {
+    resize: vertical;
+    min-height: 120px;
+    line-height: 1.5;
+  }
+
+  .form-hint {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .form-hint i {
+    color: var(--primary);
+  }
+
+  .checkbox-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1rem;
+    margin-top: 0.5rem;
+  }
+
+  .checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    transition: var(--transition);
+    cursor: pointer;
+    background: white;
+  }
+
+  .checkbox-item:hover {
+    border-color: var(--primary);
+    background: var(--primary-light);
+  }
+
+  .checkbox-item.selected {
+    border-color: var(--primary);
+    background: var(--primary-light);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .checkbox-item input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary);
+  }
+
+  .checkbox-item label {
+    margin: 0;
+    font-weight: 500;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .range-container {
+    margin-top: 0.5rem;
+  }
+
+  .range-display {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+  }
+
+  .range-value {
+    font-weight: 600;
+    color: var(--primary);
+    font-size: 0.875rem;
+  }
+
+  .range-input {
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--border);
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .range-input::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--primary);
+    cursor: pointer;
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+  }
+
+  .range-input::-webkit-slider-thumb:hover {
+    transform: scale(1.1);
+  }
+
+  .range-input::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--primary);
+    cursor: pointer;
+    border: none;
+    box-shadow: var(--shadow);
+  }
+
+  .generate-btn {
+    width: 100%;
+    padding: 1rem 2rem;
+    font-size: 1rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+
+  .generate-btn i {
+    font-size: 1.25rem;
+  }
+
+  .guide-section {
+    background: linear-gradient(135deg, var(--light), white);
+    border-radius: var(--radius-xl);
+    padding: 2rem;
+    border: 1px solid var(--border);
+  }
+
+  .guide-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .guide-title i {
+    color: var(--accent);
+    font-size: 1.5rem;
+  }
+
+  .guide-steps {
+    list-style: none;
+    padding: 0;
+  }
+
+  .guide-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    background: white;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    transition: var(--transition);
+  }
+
+  .guide-step:hover {
+    box-shadow: var(--shadow);
+  }
+
+  .step-number {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.875rem;
+    flex-shrink: 0;
+  }
+
+  .step-content h4 {
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 0.25rem;
+  }
+
+  .step-content p {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  .error-message {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: var(--danger);
+    padding: 0.75rem;
+    border-radius: var(--radius);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .error-message i {
+    font-size: 1.125rem;
+  }
+
+  @media (max-width: 1024px) {
+    .form-container {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .hero-title {
+      font-size: 2rem;
+    }
+
+    .checkbox-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .guide-step {
+      flex-direction: column;
+      text-align: center;
+    }
+  }
+</style>
+
+<div class="hero-section">
+  <div class="hero-content">
+    <h1 class="hero-title">🚀 AI Question Paper Generator</h1>
+    <p class="hero-subtitle">Create intelligent, customized question papers in minutes using advanced AI technology</p>
+  </div>
+</div>
+
+<div class="form-container">
+  <div class="form-section">
+    <div class="form-header">
+      <i class='bx bx-plus-circle'></i>
+      <div>
+        <h2 class="form-title">Generate New Paper</h2>
+        <p class="form-subtitle">Fill in the details below to create your custom question paper</p>
+      </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          {% if category == 'error' %}
+            <div class="error-message">
+              <i class='bx bx-error-circle'></i>
+              {{ message }}
+            </div>
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST" id="paper-form">
+      <div class="form-group required">
+        <label for="subject">Subject Name</label>
+        <input type="text" id="subject" name="subject" placeholder="e.g., Data Structures, Algorithms, Database Management" required>
+        <div class="form-hint">
+          <i class='bx bx-info-circle'></i>
+          Enter the main subject or course name
+        </div>
+      </div>
+
+      <div class="form-group required">
+        <label for="syllabus">Syllabus Topics</label>
+        <textarea id="syllabus" name="syllabus" rows="6" placeholder="Enter topics separated by new lines:
+1. Arrays and Linked Lists
+2. Trees and Graphs
+3. Sorting Algorithms
+4. Dynamic Programming
+5. Database Design" required></textarea>
+        <div class="form-hint">
+          <i class='bx bx-list-ul'></i>
+          One topic per line. Include numbering or bullet points for better organization.
+        </div>
+      </div>
+
+      <div class="form-group required">
+        <label>Question Types</label>
+        <div class="checkbox-grid" id="question-types">
+          <div class="checkbox-item" data-value="2">
+            <input type="checkbox" name="marks" value="2" id="marks-2">
+            <label for="marks-2">2 Marks</label>
+          </div>
+          <div class="checkbox-item" data-value="4">
+            <input type="checkbox" name="marks" value="4" id="marks-4">
+            <label for="marks-4">4 Marks</label>
+          </div>
+          <div class="checkbox-item" data-value="8">
+            <input type="checkbox" name="marks" value="8" id="marks-8">
+            <label for="marks-8">8 Marks</label>
+          </div>
+        </div>
+        <div class="form-hint">
+          <i class='bx bx-check-circle'></i>
+          Select at least one question type for your paper
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="duration">Section Time (minutes)</label>
+        <input type="number" id="duration" name="duration" min="30" max="240" step="5" value="120" required>
+        <div class="form-hint">
+          <i class='bx bx-time'></i>
+          Set exam section duration in minutes (default 120 is 2 hours)
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="difficulty">Difficulty Level</label>
+        <div class="range-container">
+          <div class="range-display">
+            <span>Easy</span>
+            <span class="range-value" id="difficulty-value">Medium (3/5)</span>
+            <span>Hard</span>
+          </div>
+          <input type="range" id="difficulty" name="difficulty" min="1" max="5" value="3" class="range-input">
+        </div>
+        <div class="form-hint">
+          <i class='bx bx-target-lock'></i>
+          1=Very Easy, 3=Medium, 5=Very Hard - Affects question complexity and total count
+        </div>
+      </div>
+
+      <button type="submit" class="btn generate-btn">
+        <i class='bx bx-sparkles'></i>
+        Generate Questions
+      </button>
+    </form>
+  </div>
+
+  <div class="guide-section">
+    <h3 class="guide-title">
+      <i class='bx bx-bulb'></i>
+      How It Works
+    </h3>
+    <ol class="guide-steps">
+      <li class="guide-step">
+        <div class="step-number">1</div>
+        <div class="step-content">
+          <h4>Enter Subject Details</h4>
+          <p>Provide the subject name and list all syllabus topics you want to cover.</p>
+        </div>
+      </li>
+      <li class="guide-step">
+        <div class="step-number">2</div>
+        <div class="step-content">
+          <h4>Select Question Types</h4>
+          <p>Choose the mark distribution (2/4/8 marks) based on your exam pattern.</p>
+        </div>
+      </li>
+      <li class="guide-step">
+        <div class="step-number">3</div>
+        <div class="step-content">
+          <h4>Set Difficulty Level</h4>
+          <p>Adjust the complexity level to match your students' learning stage.</p>
+        </div>
+      </li>
+      <li class="guide-step">
+        <div class="step-number">4</div>
+        <div class="step-content">
+          <h4>AI Generation</h4>
+          <p>Our AI creates unique, relevant questions based on your syllabus topics.</p>
+        </div>
+      </li>
+      <li class="guide-step">
+        <div class="step-number">5</div>
+        <div class="step-content">
+          <h4>Review & Customize</h4>
+          <p>Select the best questions and finalize your perfect question paper.</p>
+        </div>
+      </li>
+      <li class="guide-step">
+        <div class="step-number">6</div>
+        <div class="step-content">
+          <h4>Export & Save</h4>
+          <p>Download as PDF or save questions to your question bank for future use.</p>
+        </div>
+      </li>
+    </ol>
+  </div>
+</div>
+
+<script>
+  // Difficulty slider
+  const difficultySlider = document.getElementById('difficulty');
+  const difficultyValue = document.getElementById('difficulty-value');
+
+  const difficultyLabels = ['Very Easy', 'Easy', 'Medium', 'Hard', 'Very Hard'];
+
+  difficultySlider.addEventListener('input', function() {
+    const value = parseInt(this.value);
+    difficultyValue.textContent = `${difficultyLabels[value-1]} (${value}/5)`;
+  });
+
+  // Checkbox selection styling
+  const checkboxItems = document.querySelectorAll('.checkbox-item');
+
+  checkboxItems.forEach(item => {
+    const checkbox = item.querySelector('input[type="checkbox"]');
+
+    // Initial state
+    if (checkbox.checked) {
+      item.classList.add('selected');
+    }
+
+    // Click handler
+    item.addEventListener('click', () => {
+      checkbox.checked = !checkbox.checked;
+      item.classList.toggle('selected');
+    });
+
+    // Checkbox change handler
+    checkbox.addEventListener('change', () => {
+      item.classList.toggle('selected', checkbox.checked);
+    });
+  });
+
+  // Form validation
+  const form = document.getElementById('paper-form');
+  const subjectInput = document.getElementById('subject');
+  const syllabusTextarea = document.getElementById('syllabus');
+  const questionTypeCheckboxes = document.querySelectorAll('input[name="marks"]');
+
+  form.addEventListener('submit', function(e) {
+    let isValid = true;
+
+    // Check subject
+    if (!subjectInput.value.trim()) {
+      subjectInput.style.borderColor = 'var(--danger)';
+      isValid = false;
+    } else {
+      subjectInput.style.borderColor = 'var(--success)';
+    }
+
+    // Check syllabus
+    if (!syllabusTextarea.value.trim()) {
+      syllabusTextarea.style.borderColor = 'var(--danger)';
+      isValid = false;
+    } else {
+      syllabusTextarea.style.borderColor = 'var(--success)';
+    }
+
+    // Check question types
+    const checkedTypes = Array.from(questionTypeCheckboxes).filter(cb => cb.checked);
+    if (checkedTypes.length === 0) {
+      document.getElementById('question-types').style.border = '2px solid var(--danger)';
+      isValid = false;
+    } else {
+      document.getElementById('question-types').style.border = 'none';
+    }
+
+    if (!isValid) {
+      e.preventDefault();
+      // Show error message
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'error-message';
+      errorDiv.innerHTML = '<i class="bx bx-error-circle"></i> Please fill in all required fields and select at least one question type.';
+      form.insertBefore(errorDiv, form.firstChild);
+
+      // Remove error message after 5 seconds
+      setTimeout(() => {
+        errorDiv.remove();
+      }, 5000);
+    }
+  });
+
+  // Reset validation styling on input
+  [subjectInput, syllabusTextarea].forEach(input => {
+    input.addEventListener('input', () => {
+      input.style.borderColor = 'var(--primary)';
+    });
+  });
+
+  questionTypeCheckboxes.forEach(checkbox => {
+    checkbox.addEventListener('change', () => {
+      document.getElementById('question-types').style.border = 'none';
+    });
+  });
+
+  // Update sticky stats bar
+  function updateStickyStats(generated = 0, selected = 0, marks = 0) {
+    document.getElementById('questions-count').textContent = generated;
+    document.getElementById('selected-count').textContent = selected;
+    document.getElementById('marks-total').textContent = marks;
+  }
+
+  // Make updateStickyStats available globally
+  window.updateStickyStats = updateStickyStats;
+</script>
+{% endblock %}
+

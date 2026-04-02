@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Users{% endblock %}
+
+{% block content %}
+<style>
+  .users-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; color: var(--text); }
+  .users-header h2 { color: var(--text); }
+  .btn-add { background:var(--primary); color:white; padding:10px 16px; border-radius:4px; text-decoration:none; transition: var(--transition); }
+  .btn-add:hover { background:var(--primary-dark); transform: translateY(-2px); }
+  .users-table { width:100%; border-collapse:collapse; background:var(--card); border-radius:8px; overflow:hidden; box-shadow:var(--shadow); border: 1px solid var(--border); }
+  .users-table th { background:var(--light); padding:12px; text-align:left; font-weight:600; border-bottom:1px solid var(--border); color: var(--text); }
+  .users-table td { padding:12px; border-bottom:1px solid var(--border); color: var(--text); }
+  .users-table tr:hover { background:rgba(0,255,136,0.05); }
+  .badge-admin { background:rgba(239,68,68,0.2); color:var(--danger); padding:4px 8px; border-radius:4px; font-size:12px; border: 1px solid rgba(239,68,68,0.4); }
+  .badge-faculty { background:rgba(22,163,74,0.2); color:var(--primary); padding:4px 8px; border-radius:4px; font-size:12px; border: 1px solid rgba(22,163,74,0.4); }
+  .actions { display:flex; gap:8px; }
+  .actions a, .actions button { padding:6px 12px; border-radius:4px; text-decoration:none; cursor:pointer; border:none; font-size:12px; transition: var(--transition); }
+  .action-edit { background:var(--secondary); color:white; }
+  .action-edit:hover { background:var(--secondary-dark); transform: translateY(-1px); }
+  .action-delete { background:var(--danger); color:white; }
+  .action-delete:hover { background:#dc2626; transform: translateY(-1px); }
+  .no-users-message { text-align:center; color:var(--text-muted); margin-top:40px; font-size: 1rem; }
+</style>
+
+<div class="users-header">
+  <h2>Manage Users</h2>
+  <a href="{{ url_for('admin.add_user') }}" class="btn-add">+ Add New User</a>
+</div>
+
+{% if users %}
+<table class="users-table">
+  <thead>
+    <tr>
+      <th>Email</th>
+      <th>Name</th>
+      <th>Role</th>
+      <th>Password</th>
+      <th>Questions</th>
+      <th>Papers</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for user in users %}
+      <tr>
+        <td>{{ user.email }}</td>
+        <td>{{ user.name }}</td>
+        <td>
+          <span class="{% if user.role == 'admin' %}badge-admin{% else %}badge-faculty{% endif %}">
+            {{ user.role | upper }}
+          </span>
+        </td>
+        <td>{{ user.password }}</td>
+        <td>{{ user.question_count }}</td>
+        <td>{{ user.paper_count }}</td>
+        <td>
+          <div class="actions">
+            <a href="{{ url_for('admin.edit_user', user_id=user.id) }}" class="action-edit">Edit</a>
+            <form action="{{ url_for('admin.delete_user', user_id=user.id) }}" method="post" style="display:inline;">
+              <button class="action-delete" onclick="return confirm('Delete this user? Cannot be undone.')">Delete</button>
+            </form>
+          </div>
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="no-users-message">No users found.</p>
+{% endif %}
+
+{% endblock %}

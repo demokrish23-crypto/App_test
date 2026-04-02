@@ -1,0 +1,840 @@
+{% extends "base.html" %}
+
+{% block title %}Question Bank{% endblock %}
+
+{% block content %}
+<style>
+  /* Sticky Stats Bar */
+  .sticky-stats {
+    position: sticky;
+    top: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.95));
+    border-bottom: 1px solid #16a34a;
+    padding: 0.75rem 1.5rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    z-index: 10;
+    backdrop-filter: blur(10px);
+  }
+
+  [data-theme="dark"] .sticky-stats {
+    background: linear-gradient(135deg, rgba(21, 29, 59, 0.98), rgba(15, 23, 42, 0.95));
+    border-bottom: 2px solid #00ff88;
+    box-shadow: 0 1px 10px rgba(0, 255, 136, 0.2);
+  }
+
+  .qb-container {
+    margin-top: 0;
+  }
+
+  .stat-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.625rem;
+    background: linear-gradient(135deg, #f8fafc, #f0f9ff);
+    border-radius: 8px;
+    border: 1px solid #e0e7ff;
+    transition: all 0.3s ease;
+  }
+
+  [data-theme="dark"] .stat-item {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.5), rgba(21, 29, 59, 0.5));
+    border: 1px solid rgba(0, 255, 136, 0.3);
+  }
+
+  .stat-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.1);
+  }
+
+  [data-theme="dark"] .stat-item:hover {
+    box-shadow: 0 4px 12px rgba(0, 255, 136, 0.3);
+    border-color: rgba(0, 255, 136, 0.6);
+  }
+
+  .stat-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #16a34a, #15803d);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(22, 163, 74, 0.2);
+  }
+
+  .stat-content h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #16a34a;
+    margin: 0;
+    line-height: 1;
+  }
+
+  .stat-content p {
+    font-size: 0.7rem;
+    color: #64748b;
+    margin: 0.2rem 0 0 0;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+  }
+
+  /* Header Section */
+  .qb-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.25rem;
+    gap: 1.5rem;
+  }
+
+  .qb-header-content h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0 0 0.25rem 0;
+  }
+
+  .qb-header-content p {
+    font-size: 0.85rem;
+    color: #64748b;
+    margin: 0;
+  }
+
+  .qb-header-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #16a34a, #15803d);
+    color: white;
+    padding: 0.6rem 1.2rem;
+    border-radius: 6px;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    box-shadow: 0 2px 8px rgba(22, 163, 74, 0.15);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(22, 163, 74, 0.3);
+  }
+
+  .btn-secondary {
+    background: white;
+    color: #64748b;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    border: 2px solid #e2e8f0;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .btn-secondary:hover {
+    border-color: #16a34a;
+    color: #16a34a;
+  }
+
+  /* Filter Toolbar */
+  .qb-toolbar {
+    background: white;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1.25rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    border: 1px solid #e2e8f0;
+  }
+
+  [data-theme="dark"] .qb-toolbar {
+    background: linear-gradient(135deg, rgba(21, 29, 59, 0.7), rgba(15, 23, 42, 0.7));
+    border: 1px solid rgba(0, 255, 136, 0.2);
+    box-shadow: 0 1px 8px rgba(0, 255, 136, 0.15);
+  }
+
+  .toolbar-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 1rem;
+    align-items: flex-end;
+  }
+
+  .toolbar-filters {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 0.75rem;
+  }
+
+  .filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  .filter-group label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  [data-theme="dark"] .filter-group label {
+    color: #94a3b8;
+  }
+
+  .filter-group input,
+  .filter-group select {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-family: inherit;
+    transition: all 0.3s ease;
+    background: white;
+    color: #1e293b;
+  }
+
+  [data-theme="dark"] .filter-group input,
+  [data-theme="dark"] .filter-group select {
+    background: rgba(30, 41, 59, 0.8);
+    color: #f1f5f9;
+    border: 1px solid rgba(0, 255, 136, 0.2);
+  }
+
+  .filter-group input:focus,
+  .filter-group select:focus {
+    outline: none;
+    border-color: #16a34a;
+    box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+  }
+
+  .toolbar-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .btn-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    border: 2px solid #e2e8f0;
+    background: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    font-size: 1.2rem;
+    color: #64748b;
+  }
+
+  .btn-icon:hover {
+    border-color: #16a34a;
+    color: #16a34a;
+    background: #f0fdf4;
+  }
+
+  /* Question List */
+  .qb-list {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .qb-card {
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    padding: 1rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+  }
+
+  [data-theme="dark"] .qb-card {
+    background: linear-gradient(135deg, rgba(21, 29, 59, 0.6), rgba(15, 23, 42, 0.6));
+    border: 1px solid rgba(0, 255, 136, 0.15);
+  }
+
+  .qb-card:hover {
+    border-color: #16a34a;
+    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.1);
+    transform: translateY(-2px);
+  }
+
+  [data-theme="dark"] .qb-card:hover {
+    border-color: #00ff88;
+    box-shadow: 0 4px 20px rgba(0, 255, 136, 0.3), inset 0 0 20px rgba(0, 255, 136, 0.05);
+    transform: translateY(-2px);
+  }
+
+  .qb-card-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .qb-checkbox {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    margin-top: 0.125rem;
+  }
+
+  .qb-question-text {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #1e293b;
+    line-height: 1.4;
+    word-break: break-word;
+    flex: 1;
+  }
+
+  [data-theme="dark"] .qb-question-text {
+    color: #f1f5f9;
+  }
+
+  .qb-metadata {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    margin-bottom: 0.75rem;
+    align-items: center;
+  }
+
+  .qb-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.4rem 0.7rem;
+    border-radius: 5px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  [data-theme="dark"] .badge-marks {
+    background: rgba(0, 212, 255, 0.15);
+    color: #00d4ff;
+    border: 1px solid rgba(0, 212, 255, 0.3);
+  }
+
+  [data-theme="dark"] .badge-easy {
+    background: rgba(0, 255, 136, 0.15);
+    color: #00ff88;
+    border: 1px solid rgba(0, 255, 136, 0.3);
+  }
+
+  [data-theme="dark"] .badge-medium {
+    background: rgba(255, 154, 0, 0.15);
+    color: #ffaa00;
+    border: 1px solid rgba(255, 154, 0, 0.3);
+  }
+
+  [data-theme="dark"] .badge-hard {
+    background: rgba(255, 0, 87, 0.15);
+    color: #ff0057;
+    border: 1px solid rgba(255, 0, 87, 0.3);
+  }
+
+  [data-theme="dark"] .badge-topic {
+    background: rgba(218, 0, 255, 0.15);
+    color: #da00ff;
+    border: 1px solid rgba(218, 0, 255, 0.3);
+  }
+
+  [data-theme="dark"] .badge-subject {
+    background: rgba(0, 212, 255, 0.15);
+    color: #00d4ff;
+    border: 1px solid rgba(0, 212, 255, 0.3);
+  }
+
+  .badge-marks {
+    background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+    color: #0c4a6e;
+  }
+
+  .badge-easy {
+    background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+    color: #166534;
+  }
+
+  .badge-medium {
+    background: linear-gradient(135deg, #fed7aa, #fdba74);
+    color: #92400e;
+  }
+
+  .badge-hard {
+    background: linear-gradient(135deg, #fecaca, #fca5a5);
+    color: #991b1b;
+  }
+
+  .badge-topic {
+    background: linear-gradient(135deg, #f3e8ff, #e9d5ff);
+    color: #6b21a8;
+  }
+
+  .badge-subject {
+    background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+    color: #0369a1;
+  }
+
+  .qb-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+  }
+
+  .btn-action {
+    padding: 0.6rem 1rem;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    text-decoration: none;
+  }
+
+  .btn-edit {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: white;
+  }
+
+  .btn-edit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+  }
+
+  .btn-delete {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    color: white;
+  }
+
+  .btn-delete:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+  }
+
+  /* Empty State */
+  .empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 12px;
+    border: 2px dashed #e2e8f0;
+  }
+
+  [data-theme="dark"] .empty-state {
+    background: linear-gradient(135deg, rgba(21, 29, 59, 0.5), rgba(15, 23, 42, 0.5));
+    border: 2px dashed rgba(0, 255, 136, 0.2);
+  }
+
+  .empty-state-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+  }
+
+  [data-theme="dark"] .empty-state-icon {
+    opacity: 0.7;
+  }
+
+  .empty-state h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0 0 0.5rem 0;
+  }
+
+  [data-theme="dark"] .empty-state h3 {
+    color: #f1f5f9;
+  }
+
+  .empty-state p {
+    font-size: 1rem;
+    color: #64748b;
+    margin: 0 0 1.5rem 0;
+  }
+
+  [data-theme="dark"] .empty-state p {
+    color: #94a3b8;
+  }
+
+  @media (max-width: 900px) {
+    .sticky-stats {
+      padding: 0.6rem 0.5rem;
+    }
+  }
+  @media (max-width: 768px) {
+    .sticky-stats {
+      padding: 0.6rem 0.2rem;
+    }
+    .qb-header {
+      flex-direction: column;
+    }
+    .qb-header-content h1 {
+      font-size: 1.25rem;
+    }
+    .toolbar-row {
+      grid-template-columns: 1fr;
+    }
+    .toolbar-filters {
+      grid-template-columns: 1fr;
+    }
+    .qb-card {
+      padding: 0.75rem;
+    }
+    .stat-item {
+      padding: 0.5rem;
+    }
+    .stat-icon {
+      width: 36px;
+      height: 36px;
+      font-size: 1rem;
+    }
+    .stat-content h3 {
+      font-size: 1rem;
+    }
+  }
+</style>
+
+
+<!-- Modernized Sticky Stats Bar (now inside main content only) -->
+<div class="qb-container">
+  <div class="sticky-stats" id="sticky-stats" aria-label="Question Bank Stats" style="margin-bottom: 1.5rem;">
+  <div class="stat-item" tabindex="0" aria-label="Total Questions">
+    <div class="stat-icon"><i class='bx bx-question-mark'></i></div>
+    <div class="stat-content">
+      <h3 id="questions-count">{{ questions | length }}</h3>
+      <p>Total Questions</p>
+    </div>
+  </div>
+  <div class="stat-item" tabindex="0" aria-label="Selected Questions">
+    <div class="stat-icon"><i class='bx bx-check-circle'></i></div>
+    <div class="stat-content">
+      <h3 id="selected-count">0</h3>
+      <p>Selected</p>
+    </div>
+  </div>
+  <div class="stat-item" tabindex="0" aria-label="Total Marks">
+    <div class="stat-icon"><i class='bx bx-medal'></i></div>
+    <div class="stat-content">
+      <h3 id="marks-total">0</h3>
+      <p>Total Marks</p>
+    </div>
+  </div>
+</div>
+
+  <!-- Header -->
+
+  <div class="qb-header">
+    <div class="qb-header-content">
+      <h1><i class='bx bx-book' style="margin-right: 0.5rem; vertical-align: middle;"></i>Question Bank</h1>
+      <p class="text-muted">Manage your question library &bull; <span id="questions-count-header">{{ questions | length }}</span> total questions</p>
+    </div>
+    <div class="qb-header-actions">
+      <a href="{{ url_for('qb.add_question') }}" class="btn-primary" aria-label="Add Question">
+        <i class='bx bx-plus'></i> Add Question
+      </a>
+    </div>
+  </div>
+
+  {% if questions %}
+
+    <!-- Modernized Toolbar with Filters -->
+    <div class="qb-toolbar" aria-label="Filter and Sort Questions">
+      <form class="toolbar-row" onsubmit="event.preventDefault();">
+        <div class="toolbar-filters">
+          <div class="filter-group">
+            <label for="search-input"><i class='bx bx-search'></i> Search</label>
+            <input type="text" id="search-input" placeholder="Search by text, topic..." aria-label="Search questions">
+          </div>
+          <div class="filter-group">
+            <label for="subject-filter"><i class='bx bx-book-open'></i> Subject</label>
+            <select id="subject-filter" aria-label="Filter by subject">
+              <option value="">All Subjects</option>
+              {% for subject in subjects %}
+                <option value="{{ subject }}">{{ subject }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="difficulty-filter"><i class='bx bx-trending-up'></i> Difficulty</label>
+            <select id="difficulty-filter" aria-label="Filter by difficulty">
+              <option value="">All Levels</option>
+              <option value="Easy">Easy</option>
+              <option value="Medium">Medium</option>
+              <option value="Hard">Hard</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="bloom-filter"><i class='bx bx-brain'></i> Bloom's Level</label>
+            <select id="bloom-filter" aria-label="Filter by Bloom's Level">
+              <option value="">All Levels</option>
+              <option value="Remembering">Remembering</option>
+              <option value="Understanding">Understanding</option>
+              <option value="Applying">Applying</option>
+              <option value="Analyzing">Analyzing</option>
+              <option value="Evaluating">Evaluating</option>
+              <option value="Creating">Creating</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="co-filter"><i class='bx bx-layer'></i> Cognitive Level</label>
+            <input type="text" id="co-filter" placeholder="e.g., CO1" aria-label="Filter by Cognitive Level">
+          </div>
+          <div class="filter-group">
+            <label for="sort-by"><i class='bx bx-sort'></i> Sort By</label>
+            <select id="sort-by" onchange="applySorting()" aria-label="Sort questions">
+              <option value="subject">Subject</option>
+              <option value="topic">Topic</option>
+              <option value="marks">Marks</option>
+              <option value="difficulty">Difficulty</option>
+              <option value="bloom_level">Bloom's Level</option>
+              <option value="co_level">Cognitive Level</option>
+            </select>
+          </div>
+        </div>
+        <div class="toolbar-actions">
+          <button id="sort-toggle" class="btn-icon" type="button" onclick="toggleSortOrder()" title="Toggle sort order" aria-label="Toggle sort order">
+            <i class='bx bx-sort-up'></i>
+          </button>
+          <button id="clear-selections" class="btn-secondary" type="button" onclick="clearSelections()" style="display:none;" aria-label="Clear selected questions">
+            <i class='bx bx-x'></i> Clear
+          </button>
+          <button id="create-paper-btn" class="btn-primary" type="button" onclick="createPaperFromSelected()" style="display:none;" aria-label="Create paper from selected questions">
+            <i class='bx bx-file'></i> Create Paper
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Modernized Questions List -->
+    <div class="qb-list" id="qb-list" aria-label="Questions List">
+      {% for q in questions %}
+        <div class="qb-card" data-question-id="{{ q.id }}" data-difficulty="{{ q.difficulty.lower() }}" data-subject="{{ q.subject }}" data-topic="{{ q.topic }}" tabindex="0" aria-label="Question: {{ q.text }}">
+          <div class="qb-card-header">
+            <input type="checkbox" class="question-checkbox qb-checkbox" value="{{ q.id }}" onchange="updateActionButtons()" aria-label="Select question {{ q.id }}">
+            <div class="qb-question-text">{{ q.text }}</div>
+          </div>
+          <div class="qb-metadata">
+            <span class="qb-badge badge-marks" title="Marks">
+              <i class='bx bx-star'></i> {{ q.marks }} Marks
+            </span>
+            <span class="qb-badge {% if q.difficulty == 'Easy' %}badge-easy{% elif q.difficulty == 'Medium' %}badge-medium{% else %}badge-hard{% endif %}" title="Difficulty">
+              <i class='bx bx-trending-up'></i> {{ q.difficulty }}
+            </span>
+            <span class="qb-badge badge-topic" title="Topic">
+              <i class='bx bx-tag'></i> {{ q.topic }}
+            </span>
+            <span class="qb-badge badge-subject" title="Subject">
+              <i class='bx bx-book'></i> {{ q.subject }}
+            </span>
+            <span class="qb-badge badge-bloom" title="Bloom's Level" style="{{
+              'background:linear-gradient(135deg,#fef9c3,#fde68a);color:#92400e;' if (q.bloom_level == 'Remembering') else
+              'background:linear-gradient(135deg,#d1fae5,#6ee7b7);color:#065f46;' if (q.bloom_level == 'Understanding') else
+              'background:linear-gradient(135deg,#e0e7ff,#a5b4fc);color:#3730a3;' if (q.bloom_level == 'Applying') else
+              'background:linear-gradient(135deg,#fef3c7,#fbbf24);color:#92400e;' if (q.bloom_level == 'Analyzing') else
+              'background:linear-gradient(135deg,#fee2e2,#f87171);color:#991b1b;' if (q.bloom_level == 'Evaluating') else
+              'background:linear-gradient(135deg,#ede9fe,#a78bfa);color:#6d28d9;' if (q.bloom_level == 'Creating') else
+              'background:linear-gradient(135deg,#f3f4f6,#d1d5db);color:#374151;'
+            }}">
+              <i class='bx bx-brain'></i> {{ q.bloom_level or 'N/A' }}
+            </span>
+            <span class="qb-badge badge-co" title="Cognitive Level" style="{{
+              'background:linear-gradient(135deg,#e0e7ff,#c7d2fe);color:#3730a3;' if (q.co_level and q.co_level|lower == 'co1') else
+              'background:linear-gradient(135deg,#fef9c3,#fde68a);color:#92400e;' if (q.co_level and q.co_level|lower == 'co2') else
+              'background:linear-gradient(135deg,#d1fae5,#6ee7b7);color:#065f46;' if (q.co_level and q.co_level|lower == 'co3') else
+              'background:linear-gradient(135deg,#fee2e2,#f87171);color:#991b1b;' if (q.co_level and q.co_level|lower == 'co4') else
+              'background:linear-gradient(135deg,#ede9fe,#a78bfa);color:#6d28d9;' if (q.co_level and q.co_level|lower == 'co5') else
+              'background:linear-gradient(135deg,#f3f4f6,#d1d5db);color:#374151;'
+            }}">
+              <i class='bx bx-layer'></i> {{ q.co_level or 'N/A' }}
+            </span>
+          </div>
+          <div class="qb-actions">
+            <a href="{{ url_for('qb.edit_question', q_id=q.id) }}" class="btn-action btn-edit" aria-label="Edit question {{ q.id }}">
+              <i class='bx bx-edit'></i> Edit
+            </a>
+            <form action="{{ url_for('qb.delete_question', q_id=q.id) }}" method="post" style="display:inline;">
+              <button class="btn-action btn-delete" onclick="return confirm('Delete this question?')" aria-label="Delete question {{ q.id }}">
+                <i class='bx bx-trash'></i> Delete
+              </button>
+            </form>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <!-- Modernized Empty State -->
+    <div class="empty-state" aria-label="No Questions">
+      <div class="empty-state-icon" aria-hidden="true">📚</div>
+      <h3>No Questions Yet</h3>
+      <p>Your question bank is empty. Start creating questions to build your library.</p>
+      <a href="{{ url_for('qb.add_question') }}" class="btn-primary" aria-label="Create first question">
+        <i class='bx bx-plus'></i> Create First Question
+      </a>
+    </div>
+  {% endif %}
+</div>
+
+<script>
+  const searchInput = document.getElementById('search-input');
+  const subjectFilter = document.getElementById('subject-filter');
+  const diffFilter = document.getElementById('difficulty-filter');
+
+  const bloomFilter = document.getElementById('bloom-filter');
+  const coFilter = document.getElementById('co-filter');
+  const sortBySelect = document.getElementById('sort-by');
+  const sortToggleBtn = document.getElementById('sort-toggle');
+
+  // Initialize sort selection from URL params
+  const urlParams = new URLSearchParams(window.location.search);
+  const currentSort = urlParams.get('sort_by') || 'subject';
+  const currentOrder = urlParams.get('sort_order') || 'asc';
+
+  sortBySelect.value = currentSort;
+  updateSortButton();
+
+  function filterQuestions() {
+    const search = searchInput.value.toLowerCase();
+    const subject = subjectFilter.value;
+    const difficulty = diffFilter.value;
+    const bloom = bloomFilter.value;
+    const co = coFilter.value.trim().toLowerCase();
+
+    document.querySelectorAll('.qb-card').forEach(card => {
+      const questionText = card.querySelector('.qb-question-text').textContent.toLowerCase();
+      const cardSubject = card.getAttribute('data-subject');
+      const cardDifficulty = card.getAttribute('data-difficulty');
+      const cardTopic = card.getAttribute('data-topic').toLowerCase();
+      const cardBloom = (card.querySelector('[title="Bloom\'s Level"]').textContent || '').toLowerCase();
+      const cardCO = (card.querySelector('[title="Cognitive Level"]').textContent || '').toLowerCase();
+
+      const matchesSearch = search === '' || questionText.includes(search) || cardTopic.includes(search);
+      const matchesSubject = subject === '' || cardSubject === subject;
+      const matchesDiff = difficulty === '' || cardDifficulty === difficulty.toLowerCase();
+      const matchesBloom = bloom === '' || cardBloom.includes(bloom.toLowerCase());
+      const matchesCO = co === '' || cardCO.includes(co);
+
+      card.style.display = (matchesSearch && matchesSubject && matchesDiff && matchesBloom && matchesCO) ? 'block' : 'none';
+    });
+  }
+
+  function applySorting() {
+    const sortBy = sortBySelect.value;
+    const sortOrder = sortToggleBtn.getAttribute('data-order') || 'asc';
+    const params = new URLSearchParams();
+    params.set('sort_by', sortBy);
+    params.set('sort_order', sortOrder);
+    window.location.href = `{{ url_for('qb.view_bank') }}?${params.toString()}`;
+  }
+
+  function toggleSortOrder() {
+    const currentOrder = sortToggleBtn.getAttribute('data-order') || 'asc';
+    const newOrder = currentOrder === 'asc' ? 'desc' : 'asc';
+    sortToggleBtn.setAttribute('data-order', newOrder);
+    updateSortButton();
+    applySorting();
+  }
+
+  function updateSortButton() {
+    const order = sortToggleBtn.getAttribute('data-order') || 'asc';
+    sortToggleBtn.innerHTML = order === 'asc' ? "<i class='bx bx-sort-up'></i>" : "<i class='bx bx-sort-down'></i>";
+  }
+
+  // Initialize sort button state
+  sortToggleBtn.setAttribute('data-order', currentOrder);
+  updateSortButton();
+  
+  searchInput.addEventListener('input', filterQuestions);
+  subjectFilter.addEventListener('change', filterQuestions);
+  diffFilter.addEventListener('change', filterQuestions);
+  bloomFilter.addEventListener('change', filterQuestions);
+  coFilter.addEventListener('input', filterQuestions);
+
+  function updateActionButtons() {
+    const checkedCount = document.querySelectorAll('.question-checkbox:checked').length;
+    const clearBtn = document.getElementById('clear-selections');
+    const createBtn = document.getElementById('create-paper-btn');
+    const selectedCount = document.getElementById('selected-count');
+    
+    selectedCount.textContent = checkedCount;
+    
+    if (checkedCount > 0) {
+      clearBtn.style.display = 'inline-flex';
+      createBtn.style.display = 'inline-flex';
+      
+      // Calculate total marks
+      let totalMarks = 0;
+      document.querySelectorAll('.question-checkbox:checked').forEach(checkbox => {
+        const card = checkbox.closest('.qb-card');
+        const marksText = card.querySelector('.badge-marks').textContent;
+        const marks = parseInt(marksText.match(/\d+/)[0]);
+        totalMarks += marks;
+      });
+      document.getElementById('marks-total').textContent = totalMarks;
+    } else {
+      clearBtn.style.display = 'none';
+      createBtn.style.display = 'none';
+      document.getElementById('marks-total').textContent = '0';
+    }
+  }
+
+  function clearSelections() {
+    document.querySelectorAll('.question-checkbox').forEach(cb => cb.checked = false);
+    updateActionButtons();
+  }
+
+  function createPaperFromSelected() {
+    const selectedIds = Array.from(document.querySelectorAll('.question-checkbox:checked')).map(cb => cb.value);
+    
+    if (selectedIds.length === 0) {
+      alert('Please select at least one question');
+      return;
+    }
+
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '{{ url_for("qb.create_paper_from_bank") }}';
+    
+    selectedIds.forEach(id => {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'question_ids';
+      input.value = id;
+      form.appendChild(input);
+    });
+    
+    document.body.appendChild(form);
+    form.submit();
+  }
+</script>
+{% endblock %}
+

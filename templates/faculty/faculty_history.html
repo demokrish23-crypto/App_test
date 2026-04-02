@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Paper History{% endblock %}
+
+{% block content %}
+<style>
+  .history-table { width:100%; border-collapse:collapse; background:white; border-radius:8px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,.1); }
+  .history-table th { background:#f8fafc; padding:12px; text-align:left; font-weight:600; border-bottom:1px solid #e2e8f0; }
+  .history-table td { padding:12px; border-bottom:1px solid #e2e8f0; }
+  .history-table tr:hover { background:#f8fafc; }
+  .action-btns { display:flex; gap:8px; }
+  .action-btns a, .action-btns button { padding:6px 12px; border-radius:4px; text-decoration:none; cursor:pointer; border:none; font-size:12px; }
+  .btn-view { background:#2563eb; color:white; }
+  .btn-download { background:#16a34a; color:white; }
+  .btn-delete { background:#dc2626; color:white; }
+</style>
+
+<h2>Paper Generation History</h2>
+
+{% if papers %}
+<table class="history-table">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Subject</th>
+      <th>Difficulty</th>
+      <th>Questions</th>
+      <th>Created</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for paper in papers %}
+      <tr>
+        <td>#{{ paper.id }}</td>
+        <td>{{ paper.subject }}</td>
+        <td>{{ paper.difficulty }}/5</td>
+        <td>{{ paper.questions | length }}</td>
+        <td>{{ paper.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+        <td>
+          <div class="action-btns">
+            <a href="{{ url_for('paper.review_questions', paper_id=paper.id) }}" class="btn-view">Review</a>
+            <a href="{{ url_for('paper.export_paper', paper_id=paper.id) }}" class="btn-download">Download</a>
+          </div>
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p style="text-align:center; color:#999; margin-top:40px;">No papers generated yet. <a href="{{ url_for('paper.paper_generator') }}">Create one now</a></p>
+{% endif %}
+{% endblock %}

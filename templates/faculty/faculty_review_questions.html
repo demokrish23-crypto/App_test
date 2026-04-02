@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+
+{% block title %}Review Questions{% endblock %}
+
+{% block content %}
+<style>
+  .review-header { background:white; padding:16px; border-radius:8px; margin-bottom:16px; box-shadow:0 2px 8px rgba(0,0,0,.1); }
+  .review-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:16px; }
+  .stat { text-align:center; }
+  .stat h3 { color:#16a34a; font-size:24px; margin:0; }
+  .stat p { color:#666; font-size:12px; margin:4px 0 0 0; }
+  .question-list { background:white; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.1); overflow:hidden; }
+  .question-item { padding:16px; border-bottom:1px solid #e2e8f0; display:flex; gap:12px; }
+  .question-item:hover { background:#f8fafc; }
+  .question-checkbox { flex-shrink:0; padding-top:2px; }
+  .question-content { flex:1; }
+  .question-text { font-size:14px; line-height:1.5; color:#333; }
+  .question-meta { display:flex; gap:12px; margin-top:8px; font-size:12px; color:#999; }
+  .badge { background:#e0e7ff; color:#3730a3; padding:2px 8px; border-radius:4px; }
+  .form-actions { display:flex; gap:12px; margin-top:20px; }
+  .btn { padding:10px 20px; border-radius:4px; cursor:pointer; border:none; font-size:14px; }
+  .btn-primary { background:#16a34a; color:white; }
+  .btn-secondary { background:#2563eb; color:white; }
+</style>
+
+<h2>Review & Select Questions</h2>
+
+{% set bloom_filter = bloom_filter or 'all' %}
+
+<div style="margin-bottom: 16px;">
+  <label for="bloom-filter" style="font-weight:600; margin-right:8px;">Bloom level:</label>
+  <select id="bloom-filter" name="bloom" onchange="applyBloomFilter()" style="padding:8px;border:1px solid #cbd5e1;border-radius:6px;">
+    <option value="all" {% if bloom_filter == 'all' %}selected{% endif %}>All Levels</option>
+    <option value="Remembering" {% if bloom_filter == 'Remembering' %}selected{% endif %}>Remembering</option>
+    <option value="Understanding" {% if bloom_filter == 'Understanding' %}selected{% endif %}>Understanding</option>
+    <option value="Applying" {% if bloom_filter == 'Applying' %}selected{% endif %}>Applying</option>
+    <option value="Analyzing" {% if bloom_filter == 'Analyzing' %}selected{% endif %}>Analyzing</option>
+    <option value="Evaluating" {% if bloom_filter == 'Evaluating' %}selected{% endif %}>Evaluating</option>
+    <option value="Creating" {% if bloom_filter == 'Creating' %}selected{% endif %}>Creating</option>
+  </select>
+</div>
+
+{% if paper %}
+<div class="review-header">
+  <h3 style="margin:0; color:#333;">{{ paper.subject }}</h3>
+  <p style="color:#999; margin:4px 0 0 0;">
+      Difficulty: Level {{ paper.difficulty }}/5 • Duration: {{ duration // 60 }}h {{ duration % 60 }}m • Generated on {{ paper.created_at.strftime('%Y-%m-%d %H:%M') }}
+    </p>
+</div>
+
+<div class="review-stats">
+  <div class="stat">
+    <h3>{{ questions | length }}</h3>
+    <p>Questions Generated</p>
+  </div>
+  <div class="stat">
+    <h3 id="selected-count">0</h3>
+    <p>Selected</p>
+  </div>
+  <div class="stat">
+    <h3 id="total-marks">0</h3>
+    <p>Total Marks</p>
+  </div>
+</div>
+{% endif %}
+
+<form method="POST" id="review-form">
+  <input type="hidden" name="bloom" id="bloom-hidden" value="{{ bloom_filter }}">
+  <div class="question-list" id="question-list">
+    {% for q in questions %}
+      <div class="question-item">
+        <input type="checkbox" class="question-checkbox" name="select_question" value="{{ q.id }}" onchange="updateStats()">
+        <div class="question-content">
+          <div class="question-text">
+            <strong>(Q{{ loop.index }})</strong> {{ q.text }}
+          </div>
+          <div class="question-meta">
+            <span class="badge">{{ q.marks }} Marks</span>
+            <span class="badge" style="background:#dbeafe; color:#1d4ed8;">{{ q.bloom_level }}</span>
+            <span class="badge" style="background:#dcfce7; color:#166534;">{{ q.co_level }}</span>
+            <span class="badge" style="background:#fce7f3; color:#be185d;">{{ q.topic }}</span>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <div id="scroll-loader" style="padding:12px; text-align:center; color:#555; display:none;">Loading more questions...</div>
+
+  <div class="form-actions">
+    <button type="submit" class="btn btn-primary">Finalize Paper</button>
+    {% if paper %}
+      <button type="button" class="btn btn-secondary" onclick="saveToBank()">Save Selected to Bank</button>
+    {% endif %}
+  </div>
+</form>
+
+{% if paper %}
+<form id="save-bank-form" method="POST" action="{{ url_for('qb.save_to_bank', paper_id=paper.id) }}" style="display:none;"></form>
+{% endif %}
+
+<script>
+  function updateStats() {
+    const checkboxes = document.querySelectorAll('input[name="select_question"]:checked');
+    document.getElementById('selected-count').textContent = checkboxes.length;
+    
+    let totalMarks = 0;
+    checkboxes.forEach(cb => {
+      const item = cb.closest('.question-item');
+      const badgeText = item.querySelector('.badge').textContent;
+      const marks = parseInt(badgeText);
+      totalMarks += marks;
+    });
+    document.getElementById('total-marks').textContent = totalMarks;
+  }
+
+  function appendQuestionItem(question, index) {
+    const list = document.getElementById('question-list');
+    const item = document.createElement('div');
+    item.className = 'question-item';
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.className = 'question-checkbox';
+    checkbox.name = 'select_question';
+    checkbox.value = question.id;
+    checkbox.onchange = updateStats;
+    if (question.is_selected) checkbox.checked = true;
+
+    const content = document.createElement('div');
+    content.className = 'question-content';
+
+    const text = document.createElement('div');
+    text.className = 'question-text';
+    text.innerHTML = `<strong>(Q${index})</strong> ${question.text}`;
+
+    const meta = document.createElement('div');
+    meta.className = 'question-meta';
+    meta.innerHTML = `
+      <span class="badge">${question.marks} Marks</span>
+      <span class="badge" style="background:#dbeafe; color:#1d4ed8;">${question.bloom_level || 'N/A'}</span>
+      <span class="badge" style="background:#dcfce7; color:#166534;">${question.co_level || 'N/A'}</span>
+      <span class="badge" style="background:#fce7f3; color:#be185d;">${question.topic}</span>
+    `;
+
+    content.appendChild(text);
+    content.appendChild(meta);
+    item.appendChild(checkbox);
+    item.appendChild(content);
+    list.appendChild(item);
+  }
+
+  let currentPage = 1;
+  const perPage = 10;
+  let isLoading = false;
+  let hasMore = {{ 'true' if has_more else 'false' }};
+  const paperId = {{ paper.id if paper else 0 }};
+
+  function applyBloomFilter() {
+    const bloom = document.getElementById('bloom-filter').value;
+    const bloomHidden = document.getElementById('bloom-hidden');
+    if (bloomHidden) {
+      bloomHidden.value = bloom;
+    }
+    const query = new URLSearchParams(window.location.search);
+    if (bloom && bloom !== 'all') {
+      query.set('bloom', bloom);
+    } else {
+      query.delete('bloom');
+    }
+    window.location.search = query.toString();
+  }
+
+  async function loadMoreQuestions() {
+    if (!hasMore || isLoading || !paperId) return;
+
+    const scroller = document.getElementById('scroll-loader');
+    isLoading = true;
+    scroller.style.display = 'block';
+
+    try {
+      const nextPage = currentPage + 1;
+      const bloom = document.getElementById('bloom-filter') ? document.getElementById('bloom-filter').value : 'all';
+      const bloomQuery = bloom && bloom !== 'all' ? `&bloom=${encodeURIComponent(bloom)}` : '';
+      const response = await fetch(`/faculty/paper-review/${paperId}/questions?page=${nextPage}&per_page=${perPage}${bloomQuery}`);
+      if (!response.ok) throw new Error('Network response failed');
+
+      const data = await response.json();
+      if (!data.questions || data.questions.length === 0) {
+        hasMore = false;
+      } else {
+        const baseIndex = document.querySelectorAll('.question-item').length;
+        data.questions.forEach((question, i) => {
+          appendQuestionItem(question, baseIndex + i + 1);
+        });
+        currentPage = data.page;
+        hasMore = data.has_more;
+      }
+    } catch (error) {
+      console.error('Error loading questions:', error);
+    } finally {
+      isLoading = false;
+      scroller.style.display = hasMore ? 'none' : 'none';
+    }
+  }
+
+  window.addEventListener('scroll', () => {
+    if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 240) {
+      loadMoreQuestions();
+    }
+  });
+
+  function saveToBank() {
+    const checkedBoxes = document.querySelectorAll('input[name="select_question"]:checked');
+    if (checkedBoxes.length === 0) {
+      alert('Please select at least one question');
+      return;
+    }
+
+    const saveForm = document.getElementById('save-bank-form');
+    if (!saveForm) {
+      alert('Save form not found');
+      return;
+    }
+
+    saveForm.innerHTML = '';
+
+    checkedBoxes.forEach(box => {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'selected_question';
+      input.value = box.value;
+      saveForm.appendChild(input);
+    });
+
+    saveForm.submit();
+  }
+
+  updateStats();
+</script>
+{% endblock %}
+

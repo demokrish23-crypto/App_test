@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>AI Question Paper Generator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary: #16a34a;
+      --primary-dark: #15803d;
+      --primary-light: #dcfce7;
+      --secondary: #6366f1;
+      --secondary-dark: #4f46e5;
+      --accent: #f59e0b;
+      --dark: #0f172a;
+      --dark-light: #1e293b;
+      --light: #f8fafc;
+      --bg: #f4fff4;
+      --card: #ffffff;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      --radius-sm: 0.375rem;
+      --radius: 0.5rem;
+      --radius-lg: 0.75rem;
+      --radius-xl: 1rem;
+      --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    [data-theme="dark"] {
+      --bg: #0a0e27;
+      --card: #151d3b;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --border: #00ff88;
+      --light: #1e293b;
+      --primary-light: #083c10;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 255, 136, 0.1);
+      --shadow: 0 4px 6px -1px rgba(0, 255, 136, 0.15), 0 2px 4px -1px rgba(0, 255, 136, 0.1);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 255, 136, 0.2), 0 4px 6px -2px rgba(0, 255, 136, 0.15);
+      --shadow-xl: 0 20px 25px -5px rgba(0, 255, 136, 0.25), 0 10px 10px -5px rgba(0, 255, 136, 0.2);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    /* NAVBAR */
+    .navbar {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      background: var(--card);
+      backdrop-filter: blur(12px);
+      padding: 1rem 2.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      z-index: 1000;
+      animation: slideDown 0.4s ease;
+      transition: all 0.3s ease;
+    }
+
+    [data-theme="dark"] .navbar {
+      background: rgba(21, 29, 59, 0.95);
+      border-bottom-color: rgba(0, 255, 136, 0.3);
+    }
+
+    @keyframes slideDown {
+      from {
+        transform: translateY(-100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .nav-logo {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary);
+      letter-spacing: 0.5px;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .nav-logo:hover {
+      color: var(--primary-dark);
+    }
+
+    /* BUTTONS */
+    .primary-btn,
+    .secondary-btn {
+      padding: 0.75rem 1.5rem;
+      font-size: 0.95rem;
+      border-radius: var(--radius-lg);
+      cursor: pointer;
+      border: none;
+      font-weight: 500;
+      transition: var(--transition);
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .primary-btn {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: #fff;
+      box-shadow: var(--shadow);
+    }
+
+    .primary-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .secondary-btn {
+      background: var(--card);
+      border: 2px solid var(--primary);
+      color: var(--primary);
+    }
+
+    .secondary-btn:hover {
+      background: var(--primary-light);
+      color: var(--primary);
+      transform: translateY(-2px);
+    }
+
+    /* HERO */
+    .hero {
+      padding: 8rem 2rem 5rem;
+      text-align: center;
+      background: linear-gradient(135deg, var(--primary-light), var(--bg));
+      margin-top: 4rem;
+    }
+
+    [data-theme="dark"] .hero {
+      background: linear-gradient(135deg, rgba(0, 255, 136, 0.1), var(--bg));
+    }
+
+    .hero h1 {
+      font-size: 3.5rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 1rem;
+      line-height: 1.2;
+    }
+
+    [data-theme="dark"] .hero h1 {
+      color: #00ff88;
+    }
+
+    .hero-subtitle {
+      font-size: 1.25rem;
+      max-width: 750px;
+      margin: 0 auto 2.5rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .hero-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    /* SECTIONS */
+    .section {
+      padding: 5rem 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .section h2 {
+      font-size: 2.25rem;
+      color: var(--primary);
+      margin-bottom: 2rem;
+      text-align: center;
+      font-weight: 700;
+    }
+
+    [data-theme="dark"] .section h2 {
+      color: #00ff88;
+    }
+
+    .section p {
+      font-size: 1rem;
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+      line-height: 1.8;
+      text-align: center;
+    }
+
+    .highlight {
+      background: linear-gradient(135deg, var(--primary-light), var(--card));
+      border-radius: var(--radius-xl);
+      padding: 4rem 2rem;
+      border: 1px solid var(--border);
+    }
+
+    [data-theme="dark"] .highlight {
+      background: linear-gradient(135deg, rgba(0, 255, 136, 0.1), var(--card));
+      border-color: rgba(0, 255, 136, 0.3);
+    }
+
+    /* STATS */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 2rem;
+      background: var(--card);
+      padding: 3rem 2rem;
+      text-align: center;
+      border-radius: var(--radius-lg);
+      margin: 0 2rem;
+      box-shadow: var(--shadow);
+    }
+
+    .stat {
+      transition: var(--transition);
+      padding: 1rem;
+    }
+
+    .stat:hover {
+      transform: translateY(-4px);
+    }
+
+    .stat h2 {
+      font-size: 2.5rem;
+      color: var(--primary);
+      margin-bottom: 0.5rem;
+    }
+
+    [data-theme="dark"] .stat h2 {
+      color: #00ff88;
+    }
+
+    .stat p {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+    }
+
+    /* LISTS */
+    .benefits,
+    .challenges,
+    .future-points {
+      list-style: none;
+      max-width: 700px;
+      margin: 2rem auto;
+      text-align: left;
+    }
+
+    .benefits li,
+    .challenges li,
+    .future-points li {
+      margin-bottom: 1.25rem;
+      padding: 1rem;
+      background: var(--card);
+      border-radius: var(--radius-lg);
+      border-left: 4px solid var(--primary);
+      transition: var(--transition);
+      color: var(--text);
+      font-size: 0.95rem;
+    }
+
+    [data-theme="dark"] .benefits li,
+    [data-theme="dark"] .challenges li,
+    [data-theme="dark"] .future-points li {
+      border-left-color: #00ff88;
+    }
+
+    .benefits li:hover,
+    .challenges li:hover,
+    .future-points li:hover {
+      transform: translateX(8px);
+      box-shadow: var(--shadow);
+    }
+
+    /* STEPS */
+    .steps {
+      list-style: decimal inside;
+      max-width: 700px;
+      margin: 2rem auto;
+      font-size: 1rem;
+      color: var(--text);
+    }
+
+    .steps li {
+      margin-bottom: 1rem;
+      padding: 0.75rem 1rem;
+      background: var(--card);
+      border-radius: var(--radius);
+      transition: var(--transition);
+    }
+
+    .steps li:hover {
+      background: var(--primary-light);
+      padding-left: 1.5rem;
+    }
+
+    /* DEVELOPERS */
+    .dev-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2rem;
+      margin-top: 3rem;
+    }
+
+    .dev-card {
+      background: var(--card);
+      padding: 2rem 1.5rem;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      text-align: center;
+      transition: var(--transition);
+      border: 1px solid var(--border);
+    }
+
+    .dev-card:hover {
+      transform: translateY(-8px);
+      box-shadow: var(--shadow-lg);
+      border-color: var(--primary);
+    }
+
+    [data-theme="dark"] .dev-card:hover {
+      border-color: #00ff88;
+    }
+
+    .dev-card img {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid var(--primary-light);
+      display: block;
+    }
+
+    .dev-card .avatar {
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      margin: 0 auto 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      overflow: hidden;
+    }
+     .dev-card img {
+      width: 155px;
+      height: 155px;
+      border-radius: 50%;
+    }
+
+    .dev-card h3 {
+      font-size: 1.1rem;
+      color: var(--text);
+      margin-bottom: 0.5rem;
+    }
+
+    .dev-card p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    /* REVIEWS */
+    .review-carousel {
+      display: flex;
+      gap: 1.5rem;
+      overflow-x: auto;
+      padding: 1.5rem 0;
+      margin: 2rem 0;
+      scroll-behavior: smooth;
+      scrollbar-width: thin;
+      scrollbar-color: var(--primary) var(--border);
+    }
+
+    .review-carousel::-webkit-scrollbar {
+      height: 6px;
+    }
+
+    .review-carousel::-webkit-scrollbar-track {
+      background: var(--border);
+      border-radius: 10px;
+    }
+
+    .review-carousel::-webkit-scrollbar-thumb {
+      background: var(--primary);
+      border-radius: 10px;
+    }
+
+    .review-carousel::-webkit-scrollbar-thumb:hover {
+      background: var(--primary-dark);
+    }
+
+    [data-theme="dark"] .review-carousel::-webkit-scrollbar-track {
+      background: rgba(0, 255, 136, 0.2);
+    }
+
+    [data-theme="dark"] .review-carousel::-webkit-scrollbar-thumb {
+      background: #00ff88;
+    }
+
+    [data-theme="dark"] .review-carousel::-webkit-scrollbar-thumb:hover {
+      background: rgba(0, 255, 136, 0.8);
+    }
+
+    .review-card {
+      background: var(--card);
+      padding: 1.75rem;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      text-align: center;
+      transition: var(--transition);
+      border: 1px solid var(--border);
+      min-width: 300px;
+      flex-shrink: 0;
+    }
+
+    .review-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    [data-theme="dark"] .review-card:hover {
+      border-color: #00ff88;
+    }
+
+    .review-card img {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      margin: 0 auto 0.75rem;
+      object-fit: cover;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1.5rem;
+      font-weight: 700;
+      border: 2px solid var(--primary-light);
+    }
+
+    .review-card h4 {
+      font-size: 1rem;
+      color: var(--text);
+      margin-bottom: 0.25rem;
+    }
+
+    .review-card span {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--primary);
+      margin-bottom: 0.75rem;
+      font-weight: 600;
+    }
+
+    .review-card p {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    /* REVEAL */
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: all 0.8s ease;
+    }
+
+    .reveal.active {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* FOOTER */
+    footer {
+      text-align: center;
+      padding: 2.5rem 2rem;
+      background: var(--card);
+      margin-top: 4rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.875rem;
+      color: var(--text-muted);
+    }
+
+    footer a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      .navbar {
+        padding: 0.75rem 1.5rem;
+      }
+
+      .nav-logo {
+        font-size: 1.25rem;
+      }
+
+      .hero {
+        padding: 6rem 1rem 3rem;
+        margin-top: 3.5rem;
+      }
+
+      .hero h1 {
+        font-size: 2.25rem;
+      }
+
+      .hero-subtitle {
+        font-size: 1rem;
+      }
+
+      .hero-buttons {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .primary-btn,
+      .secondary-btn {
+        width: 100%;
+        max-width: 300px;
+      }
+
+      .section {
+        padding: 3rem 1rem;
+      }
+
+      .section h2 {
+        font-size: 1.75rem;
+      }
+
+      .stats {
+        grid-template-columns: 1fr;
+        margin: 0 1rem;
+      }
+
+      .dev-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .review-carousel {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <a href="/" class="nav-logo">
+      <i class='bx bx-brain'></i>
+    MindForge
+    </a>
+    <a href="/login"><button class="primary-btn">Login</button></a>
+  </nav>
+
+
+   <a href="/" class="logo">
+   
+    
+  </a>
+
+  <!-- HERO -->
+  <header class="hero reveal">
+    <h1>AI Question Paper Generator</h1>
+    <p class="hero-subtitle">
+      Intelligent, Secure & Curriculum-Aligned Assessment Creation
+    </p>
+    <div class="hero-buttons">
+      <a href="/login"><button class="primary-btn">Get Started</button></a>
+      <a href="#learn_more"><button class="secondary-btn">Learn More</button></a>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- STATS -->
+    <section class="stats reveal">
+      <div class="stat"><h2 class="counter" data-target="500">0</h2><p>Papers Generated</p></div>
+      <div class="stat"><h2 class="counter" data-target="95">0</h2><p>% Relevance</p></div>
+      <div class="stat"><h2 class="counter" data-target="200">0</h2><p>Faculty Hours Saved</p></div>
+    </section>
+
+    <!-- ABOUT -->
+    <section class="section reveal" id="learn_more">
+      <h2>What is an AI Question Paper Generator?</h2>
+      <p>
+        It is an intelligent automated tool that uses AI and ML algorithms to create
+        examination questions, quizzes, and complete test papers from your input content.
+      </p>
+    </section>
+
+    <!-- BENEFITS -->
+    <section class="section highlight reveal">
+      <h2>Key Benefits of Using AI</h2>
+      <ul class="benefits">
+        <li><strong>⚡ Dramatic Time Savings</strong> – Papers in minutes, not hours</li>
+        <li><strong>✓ Consistent Quality</strong> – Balanced difficulty & Bloom's mapping</li>
+        <li><strong>🔐 Enhanced Security</strong> – Unlimited unique papers</li>
+        <li><strong>🎯 Curriculum Alignment</strong> – Unit-wise & topic-wise balance</li>
+      </ul>
+    </section>
+
+    <!-- STEPS -->
+    <section class="section reveal">
+      <h2>Step-by-Step: Creating Question Papers</h2>
+      <ol class="steps">
+        <li>Define Subject & Topics</li>
+        <li>Set Difficulty Distribution</li>
+        <li>Identify Learner Level</li>
+        <li>Choose Exam Goal</li>
+        <li>Select Question Types</li>
+        <li>Input Syllabus</li>
+        <li>Review & Export (PDF / DOC)</li>
+      </ol>
+    </section>
+
+    <!-- CHALLENGES -->
+    <section class="section highlight reveal">
+      <h2>Common Challenges & Solutions</h2>
+      <ul class="challenges">
+        <li><strong>❓ Irrelevant questions?</strong><br>✔ Provide focused syllabus input.</li>
+        <li><strong>❓ Too easy or difficult?</strong><br>✔ Adjust Bloom levels.</li>
+        <li><strong>❓ Limited coverage?</strong><br>✔ Combine multiple sources.</li>
+        <li><strong>❓ Academic integrity?</strong><br>✔ Unique paper generation.</li>
+        <li><strong>❓ Faculty resistance?</strong><br>✔ Demonstrate time savings.</li>
+      </ul>
+    </section>
+
+    <!-- FUTURE -->
+    <section class="section reveal">
+      <h2>The Future of Assessment Creation</h2>
+      <p>
+        The shift from manual to AI-powered question paper generation is a fundamental
+        transformation in education.
+      </p>
+      <ul class="future-points">
+        <li>⚡ Papers in minutes</li>
+        <li>🎯 95–98% relevance</li>
+        <li>🔐 Secure assessments</li>
+        <li>🧠 Bloom’s Taxonomy based</li>
+        <li>💰 Reduced costs</li>
+      </ul>
+    </section>
+
+    <!-- DEVELOPERS -->
+    <section class="section highlight reveal">
+      <h2>Meet the Developers</h2>
+      <div class="dev-grid">
+        <div class="dev-card"><div class="avatar"><img src="/static/media/chaitanya.jpeg" alt="Chaitanya"></div><h3>Chaitanya Purohit</h3><p>Backend Developer</p></div>
+        <div class="dev-card"><div class="avatar"><img src="/static/media/khushi.jpeg" alt="Khushi"></div><h3>Khushi</h3><p>Frontend Developer</p></div>
+        <div class="dev-card"><div class="avatar"><img src="/static/media/krritika.jpeg" alt="Krritika"></div><h3>Krritika</h3><p>Frontend Developer</p></div>
+        <div class="dev-card"><div class="avatar"><img src="/static/media/kunal.jpeg" alt="Kunal"></div><h3>Kunal</h3><p>Backend Developer</p></div>
+        <div class="dev-card"><div class="avatar"><img src="/static/media/gungun.jpeg" alt="Gungun"></div><h3>Gungun</h3><p>UI/UX Designer</p></div>
+        <div class="dev-card"><div class="avatar"><img src="/static/media/gursimar.jpeg" alt="Gursimar"></div><h3>Gursimar</h3><p>Research & Documentation</p></div>
+      </div>
+
+    </section>
+
+    <!-- REVIEWS -->
+    <section class="section reveal">
+      <h2>Faculty Reviews</h2>
+      <div class="review-carousel">
+        <div class="review-card"><img src="https://i.pravatar.cc/80/1"><h4>Dr. A. Sharma</h4><span>Professor</span><p>Saved me over 200 hours every year.</p></div>
+        <div class="review-card"><img src="https://i.pravatar.cc/80/2"><h4>Prof. R. Mehta</h4><span>Faculty</span><p>Bloom’s taxonomy integration is excellent.</p></div>
+        <div class="review-card"><img src="https://i.pravatar.cc/80/3"><h4>Dr. S. Verma</h4><span>HOD</span><p>Perfect for semester exams.</p></div>
+        <div class="review-card"><img src="https://i.pravatar.cc/80/4"><h4>Prof. K. Rao</h4><span>Lecturer</span><p>Highly accurate questions.</p></div>
+        <div class="review-card"><img src="https://i.pravatar.cc/80/5"><h4>Dr. L. Singh</h4><span>Math Faculty</span><p>Balanced and fair papers.</p></div>
+        <div class="review-card"><img src="https://i.pravatar.cc/80/6"><h4>Prof. P. Gupta</h4><span>Physics</span><p>Massive time saver.</p></div>
+        <div class="review-card"><img src="https://i.pravatar.cc/80/7"><h4>Dr. N. Das</h4><span>Biology</span><p>Excellent topic coverage.</p></div>
+        <div class="review-card"><img src="https://i.pravatar.cc/80/8"><h4>Prof. T. Iyer</h4><span>CS</span><p>Students love the variety.</p></div>
+        <div class="review-card"><img src="https://i.pravatar.cc/80/9"><h4>Dr. M. Khan</h4><span>Engineering</span><p>Reduces question bias.</p></div>
+        <div class="review-card"><img src="https://i.pravatar.cc/80/10"><h4>Prof. R. Patel</h4><span>Economics</span><p>Maintains integrity.</p></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>&copy; 2024 AI Question Paper Generator. All rights reserved. | <a href="#privacy">Privacy Policy</a> | <a href="#terms">Terms of Service</a></p>
+  </footer>
+
+  <script>
+    // Counter animation
+    const counters = document.querySelectorAll('.counter');
+
+    const runCounter = () => {
+      counters.forEach((counter) => {
+        const target = +counter.getAttribute('data-target');
+        let count = 0;
+        const increment = target / 200;
+
+        const updateCount = () => {
+          count += increment;
+          if (count < target) {
+            counter.textContent = Math.ceil(count);
+            setTimeout(updateCount, 10);
+          } else {
+            counter.textContent = target;
+          }
+        };
+
+        updateCount();
+      });
+    };
+
+    // Intersection Observer for reveal animations
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('active');
+          if (entry.target.classList.contains('stats')) {
+            runCounter();
+          }
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
+
+    // Faculty reviews slow auto-scroll
+    const reviewCarousel = document.querySelector('.review-carousel');
+    if (reviewCarousel) {
+      const autoScrollSpeed = 0.8; // px per frame
+      let scrollAnimationId = null;
+
+      const animateScroll = () => {
+        if (!reviewCarousel || reviewCarousel.scrollWidth <= reviewCarousel.clientWidth) {
+          scrollAnimationId = requestAnimationFrame(animateScroll);
+          return;
+        }
+
+        reviewCarousel.scrollLeft += autoScrollSpeed;
+
+        if (reviewCarousel.scrollLeft + reviewCarousel.clientWidth >= reviewCarousel.scrollWidth - 1) {
+          reviewCarousel.scrollLeft = 0;
+        }
+
+        scrollAnimationId = requestAnimationFrame(animateScroll);
+      };
+
+      const stopAutoScroll = () => {
+        if (scrollAnimationId !== null) {
+          cancelAnimationFrame(scrollAnimationId);
+          scrollAnimationId = null;
+        }
+      };
+
+      const startAutoScroll = () => {
+        if (scrollAnimationId === null) {
+          scrollAnimationId = requestAnimationFrame(animateScroll);
+        }
+      };
+
+      reviewCarousel.addEventListener('mouseenter', stopAutoScroll);
+      reviewCarousel.addEventListener('mouseleave', startAutoScroll);
+
+      startAutoScroll();
+    }
+  </script>
+
+</body>
+
+</html>
