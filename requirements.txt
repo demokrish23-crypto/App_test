@@ -5,3 +5,4 @@ werkzeug
 fpdf2
 python-docx
 reportlab
+gunicorn
